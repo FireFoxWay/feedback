@@ -1,12 +1,12 @@
-# Customer Feedback — Streamlit (Standalone)
+# Customer Feedback — Streamlit (PIN 7911)
 
-A simple, version-safe Streamlit app for collecting customer ratings and comments.
+A simple Streamlit app for collecting customer ratings and comments.
 
 ## Features
 - Star rating (1–5), comments
 - Optional name, email, phone
-- Persists to **feedback_data.csv** in the app folder
-- Basic **Admin Dashboard** (unlock with any non-empty PIN in the sidebar)
+- Persists to `feedback_data.csv`
+- Fixed Admin PIN = `7911`
 - Export all feedback to CSV
 
 ## Run locally
