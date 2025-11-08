@@ -4,7 +4,7 @@
 # - Simple star rating + comments
 # - Optional name/email/phone
 # - Persists feedback to local CSV (feedback_data.csv)
-# - Admin dashboard protected by a PIN (set via sidebar)
+# - Admin dashboard protected by a fixed PIN (7911)
 # - Version-safe: no experimental Streamlit APIs
 # ------------------------------------------------------------
 
@@ -17,6 +17,7 @@ from datetime import datetime
 st.set_page_config(page_title="Customer Feedback", page_icon="📝", layout="wide")
 
 DATA_FILE = "feedback_data.csv"
+ADMIN_PIN = "7911"
 
 # ---------------- Utilities ----------------
 def load_data():
@@ -41,7 +42,6 @@ def avg_rating(df: pd.DataFrame):
         return 0.0
 
 def star_display(value: float) -> str:
-    # Show rounded rating with stars
     filled = "★" * int(round(value))
     empty = "☆" * (5 - int(round(value)))
     return f"{filled}{empty} ({value:.2f}/5)"
@@ -50,19 +50,17 @@ def star_display(value: float) -> str:
 st.sidebar.title("Feedback App")
 st.sidebar.caption("A simple collector for customer reviews.")
 
-# Optional: choose a category to display on the main form (your services/products)
 categories_default = ["General Experience", "Product Quality", "Delivery", "Support", "Pricing"]
 st.sidebar.write("Suggested categories (you can edit on the main form):")
 st.sidebar.code(", ".join(categories_default))
 
 st.sidebar.markdown("---")
-admin_pin = st.sidebar.text_input("Admin PIN (to view dashboard)", type="password", help="Set a simple PIN like 1234")
-st.sidebar.caption("Leave blank if you don't need the dashboard.")
+admin_pin = st.sidebar.text_input("Admin PIN (to view dashboard)", type="password", help="Enter the admin PIN to access the dashboard.")
+st.sidebar.caption("Admin PIN is fixed to 7911.")
 
 # ---------------- Tabs ----------------
 tab_feedback, tab_thanks, tab_admin = st.tabs(["Submit Feedback", "Thank You", "Admin Dashboard"])
 
-# Session flag to show 'Thank You' after submit
 if "submitted" not in st.session_state:
     st.session_state.submitted = False
 
@@ -70,11 +68,10 @@ with tab_feedback:
     st.header("📝 Share your feedback")
     st.write("We value your opinion. Please rate your experience and share any comments.")
 
-    # Form
     with st.form("feedback_form", clear_on_submit=True):
-        rating = st.slider("Overall rating", min_value=1, max_value=5, value=4, help="1 = Very poor, 5 = Excellent")
+        rating = st.slider("Overall rating", 1, 5, 4)
         category = st.text_input("Category (e.g., Product Quality, Support, Delivery)", value=categories_default[0])
-        comments = st.text_area("Comments / Suggestions", height=120, placeholder="Tell us what went well or what we can improve.")
+        comments = st.text_area("Comments / Suggestions", height=120)
         st.markdown("**(Optional) Contact details**")
         cols = st.columns(3)
         with cols[0]:
@@ -83,7 +80,6 @@ with tab_feedback:
             email = st.text_input("Email")
         with cols[2]:
             phone = st.text_input("Phone")
-
         consent = st.checkbox("I consent to store this feedback for quality improvement.", value=True)
         submitted = st.form_submit_button("Submit Feedback")
 
@@ -119,9 +115,11 @@ with tab_thanks:
 with tab_admin:
     st.header("🔒 Admin Dashboard")
     if not admin_pin:
-        st.info("Enter an Admin PIN in the sidebar to unlock the dashboard.")
+        st.info("Enter Admin PIN in the sidebar to unlock the dashboard.")
+    elif admin_pin != ADMIN_PIN:
+        st.error("❌ Incorrect PIN. Access denied.")
     else:
-        # In a real app you'd verify PIN against a secret; here any non-empty PIN enables the dashboard.
+        st.success("✅ Access granted.")
         df = load_data()
         if df.empty:
             st.warning("No feedback yet.")
